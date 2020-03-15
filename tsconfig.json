@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "outDir": "./",
+        "strict": true,
+        "strictNullChecks": false,
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "moduleResolution": "node",
+        "esModuleInterop": true,
+        "lib": ["es2020", "DOM"]
+    },
+    "include": ["./src/**/*", "./db/**/*", "index.js"],
+    "exclude": ["node_modules"]
+}

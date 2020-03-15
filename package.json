@@ -1,0 +1,20 @@
+{
+    "name": "coronaapiromania",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "build": "tsc src/index.ts"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@types/node": "^13.9.1",
+        "ts-node": "^8.6.2",
+        "typescript": "^3.8.3"
+    },
+    "devDependencies": {
+        "eslint": "^6.8.0",
+        "prettier": "^1.19.1"
+    }
+}
