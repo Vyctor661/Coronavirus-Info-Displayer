@@ -1,44 +1,68 @@
-// Someone kill me cuz this is the worst way of making a website with ts
+type ErrorMessage = {
+  message: string;
+};
 
-window.onload = () => {
-    const button: HTMLButtonElement = <HTMLButtonElement>(
-        document.getElementById("button")
-    );
+type ErrorData = {
+  error?: ErrorMessage;
+};
 
-    type errorMessage = {
-        message: string;
-    };
-    type errorData = {
-        error?: errorMessage;
-    };
+const button = document.getElementById("button") as HTMLButtonElement;
 
-    const showError = (data: errorData) => {
-        const content: HTMLElement = <HTMLElement>(
-            document.getElementById("content")
-        );
-        content.innerText = data.error.message;
-    };
+const showError = (data: ErrorData) => {
+  const content = document.getElementById("content");
 
-    interface confirmedData {
-        value: number;
-    }
-    interface recoveredData {
-        value: number;
-    }
-    interface deathsData {
-        value: number;
-    }
-    interface generatedData {
-        confirmed: confirmedData;
-        recovered: recoveredData;
-        deaths: deathsData;
-    }
-    const generateTable = (
-        data: generatedData,
-        globalData: generatedData,
-        country: string
-    ) => {
-        return `
+  content.innerText = data.error.message;
+};
+
+interface ConfirmedData {
+  value: number;
+}
+
+interface RecoveredData {
+  value: number;
+}
+
+interface DeathsData {
+  value: number;
+}
+
+interface GeneratedData {
+  confirmed: ConfirmedData;
+  recovered: RecoveredData;
+  deaths: DeathsData;
+}
+
+// This is here so we get syntax highlighting from the lit-html extension
+const html = (
+  s: TemplateStringsArray,
+  ...data: Array<string | number>
+): string => {
+  return s.reduce((acc, curr, index) => `${acc}${data[index - 1]}${curr}`, "");
+};
+
+const calculatePercentage = (
+  data: GeneratedData,
+  key: "deaths" | "recovered",
+) => {
+  return (data[key].value / data.confirmed.value * 100).toFixed(2);
+};
+
+const generateTable = (
+  data: GeneratedData,
+  globalData: GeneratedData,
+  country: string,
+) => {
+  const deathPercentage = {
+    local: calculatePercentage(data, "deaths"),
+    global: calculatePercentage(globalData, "deaths"),
+  };
+
+  const recoveryPercentage = {
+    local: calculatePercentage(data, "recovered"),
+    global: calculatePercentage(globalData, "recovered"),
+  };
+
+  return html`
         <table>
             <tr>
                 <th>Data</th>
@@ -62,73 +86,56 @@ window.onload = () => {
             </tr>
             <tr>
                 <td>Death Percentage</td>
-                <td>${(
-                    (data.deaths.value / data.confirmed.value) *
-                    100
-                ).toFixed(2)}%</td>
-                <td>${(
-                    (globalData.deaths.value / globalData.confirmed.value) *
-                    100
-                ).toFixed(2)}%</td>
+                <td>${deathPercentage.local}%</td>
+                <td>${deathPercentage.global}%</td>
             </tr>
             <tr>
                 <td>Recovery Percentage</td>
-                <td>${(
-                    (data.recovered.value / data.confirmed.value) *
-                    100
-                ).toFixed(2)}%</td>
-                <td>${(
-                    (globalData.recovered.value / globalData.confirmed.value) *
-                    100
-                ).toFixed(2)}%</td>
+                <td>${recoveryPercentage.local}%</td>
+                <td>${recoveryPercentage.global}%</td>
             </tr>
         </table>`;
-    };
-
-    const getData = async (country: string) => {
-        try {
-            const apiData = await fetch(
-                `https://covid19.mathdro.id/api/countries/${country}`
-            );
-            const apiJsonData = await apiData.json();
-            return apiJsonData;
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-    const getGlobalData = async () => {
-        try {
-            const apiData = await fetch(`https://covid19.mathdro.id/api`);
-            const apiJsonData = await apiData.json();
-            return apiJsonData;
-        } catch (error) {
-            console.log(error.message);
-        }
-    };
-    const showData = async () => {
-        try {
-            const country: string = (<HTMLInputElement>(
-                document.getElementById("input")
-            )).value;
-            const data = await getData(country);
-
-            if (data.error) {
-                showError(data);
-            } else {
-                const content: HTMLElement = <HTMLElement>(
-                    document.getElementById("content")
-                );
-                content.innerHTML = generateTable(
-                    data,
-                    await getGlobalData(),
-                    country
-                );
-            }
-        } catch (error) {
-            console.log(error);
-        }
-    };
-    showData();
-
-    button.addEventListener("click", () => showData());
 };
+
+const getData = async (country: string) => {
+  const apiData = await fetch(
+    `https://covid19.mathdro.id/api/countries/${country}`,
+  );
+
+  return apiData.json();
+};
+
+const getGlobalData = async () => {
+  const apiData = await fetch(`https://covid19.mathdro.id/api`);
+  return apiData.json();
+};
+
+const showData = async () => {
+  try {
+    const { value: country } = (
+      document.getElementById("input")
+    ) as HTMLInputElement;
+
+    const data = await getData(country);
+
+    if (data.error) {
+      return showError(data);
+    }
+
+    const content = (
+      document.getElementById("content")
+    );
+
+    content.innerHTML = generateTable(
+      data,
+      await getGlobalData(),
+      country,
+    );
+  } catch (error) {
+    console.log(error.message || error);
+  }
+};
+
+showData();
+
+button.addEventListener("click", showData);
